@@ -125,7 +125,7 @@ searchInput.addEventListener(
         notesList.innerHTML = "";
 
         filteredNotes.forEach(
-        function(note){
+        function(note,index){
 
             notesList.innerHTML += `
 
@@ -133,7 +133,17 @@ searchInput.addEventListener(
 
                 <h3>${note.title}</h3>
 
-                <p>${note.content}</p>
+                <p>${note.content.replace(/\n/g, "<br>")}</p>
+                 <button
+            onclick="editNote(${index})">
+            Edit
+            </button>
+
+            <button
+            onclick="deleteNote(${index})">
+            Delete
+            </button>
+
 
             </div>
 

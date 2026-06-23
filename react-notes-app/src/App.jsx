@@ -1,171 +1,91 @@
-import { useState, useEffect } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
+import Home from "./Home";
+import Login from "./Login";
+import Register from "./Register";
+import Notes from "./Notes";
+import { useState } from "react";
+
+function ProtectedRoute({ children }) {
+  const token =
+    localStorage.getItem("token");
+
+  return token
+    ? children
+    : <Navigate to="/login" />;
+}
 
 function App() {
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [search, setSearch] = useState("");
-  const [editIndex, setEditIndex] = useState(null);
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("theme") === "dark"
+  );
 
-  const [notes, setNotes] = useState(() => { const savedNotes = localStorage.getItem("notes");
-  return savedNotes ? JSON.parse(savedNotes) : []; });
+  function toggleTheme() {
 
-  useEffect(() => {localStorage.setItem("notes", JSON.stringify(notes) );}, [notes]);
+    const newTheme = !darkMode;
 
-  function saveNote() {
+    setDarkMode(newTheme);
 
-    if (title === "" || content === "") {
-      alert("Fill all fields");
-      return;
-    }
-
-    const newNote = {title,content };
-    
-    if (editIndex === null) {
-      setNotes([...notes, newNote]);
-    } else {
-      const updatedNotes = [...notes];
-      updatedNotes[editIndex] = newNote;
-      setNotes(updatedNotes);
-      setEditIndex(null);
-    }
-
-    setTitle("");
-    setContent("");
-  }
-
-  function deleteNote(index) {
-
-    const updatedNotes =
-      notes.filter(
-        (note, i) => i !== index
-      );
-
-    setNotes(updatedNotes);
-  }
-
-  function editNote(index) {
-
-    setTitle(notes[index].title);
-
-    setContent(
-      notes[index].content
+    localStorage.setItem(
+      "theme",
+      newTheme ? "dark" : "light"
     );
 
-    setEditIndex(index);
   }
-
-  const filteredNotes =
-    notes.filter((note) =>
-      note.title
-        .toLowerCase()
-        .includes(
-          search.toLowerCase()
-        )
-    );
 
   return (
-    <div style={{
-      width: "80%",
-      margin: "auto",
-      padding: "20px"
-    }}>
+    <BrowserRouter>
+      <Routes>
+        <Route
+  path="/"
+  element={
+    <Home
+      darkMode={darkMode}
+      toggleTheme={toggleTheme}
+    />
+  }
+/>
 
-      <h1>Notes App</h1>
+<Route
+  path="/login"
+  element={
+    <Login
+      darkMode={darkMode}
+      toggleTheme={toggleTheme}
+    />
+  }
+/>
 
-      <input
-        type="text"
-        placeholder="Enter Title"
-        value={title}
-        onChange={(e) =>
-          setTitle(e.target.value)
-        }
-        style={{
-          width: "100%",
-          padding: "10px",
-          marginBottom: "10px"
-        }}
+<Route
+  path="/register"
+  element={
+    <Register
+      darkMode={darkMode}
+      toggleTheme={toggleTheme}
+    />
+  }
+/>
+
+<Route
+  path="/notes"
+  element={
+    <ProtectedRoute>
+      <Notes
+        darkMode={darkMode}
+        toggleTheme={toggleTheme}
       />
-
-      <textarea
-        placeholder="Enter Content"
-        value={content}
-        onChange={(e) =>
-          setContent(e.target.value)
-        }
-        style={{
-          width: "100%",
-          padding: "10px",
-          height: "100px",
-          marginBottom: "10px"
-        }}
-      />
-
-      <button
-        onClick={saveNote}
-        style={{
-          padding: "10px 20px"
-        }}
-      >
-        {editIndex === null
-          ? "Save Note"
-          : "Update Note"}
-      </button>
-
-      <br /><br />
-
-      <input
-        type="text"
-        placeholder="Search Notes"
-        value={search}
-        onChange={(e) =>
-          setSearch(e.target.value)
-        }
-        style={{
-          width: "100%",
-          padding: "10px"
-        }}
-      />
-
-      <br /><br />
-
-      {filteredNotes.map(
-        (note, index) => (
-
-        <div
-          key={index}
-          style={{
-            border: "1px solid #ccc",
-            padding: "10px",
-            marginBottom: "10px"
-          }}
-        >
-
-          <h3>{note.title}</h3>
-
-          <p>{note.content}</p>
-
-          <button
-            onClick={() =>
-              editNote(index)
-            }
-          >
-            Edit
-          </button>
-
-          <button onClick={() => deleteNote(index)
-            }
-            style={{
-              marginLeft: "10px"
-            }}
-          >
-            Delete
-          </button>
-
-        </div>
-
-      ))}
-    </div>
+    </ProtectedRoute>
+  }
+/>
+         
+      </Routes>
+    </BrowserRouter>
   );
 }
 
