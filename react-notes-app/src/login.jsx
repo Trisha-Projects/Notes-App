@@ -63,10 +63,7 @@ const [loading, setLoading] = useState(false);
     const data =
       await res.json();
 
-    localStorage.setItem(
-      "token",
-      data.token
-    );
+    localStorage.setItem( "token",data.token);
 
     toast.success(
       "Login Successful"

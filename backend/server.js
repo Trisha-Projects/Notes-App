@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import Database from "better-sqlite3";
+import Database  from "better-sqlite3";
 import jwt from "jsonwebtoken";
 import winston from "winston";
 import bcrypt from "bcrypt";
@@ -29,19 +29,39 @@ const logger = winston.createLogger({
 const app = express();
 const SECRET_KEY = process.env.SECRET_KEY;
 console.log("SECRET KEY",SECRET_KEY);
-const transporter = nodemailer.createTransport({
-  service: "gmail",
 
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+
+//   auth: {
+//     user: process.env.EMAIL,
+//     pass: process.env.PASSWORD,
+//   },
+// });
+const transporter=nodemailer.createTransport({
+  host:"smtp.gmail.com",
+  port:587,
+  secure:false,
+  family:4,
   auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASSWORD,
+    user:process.env.EMAIL,
+    pass:process.env.PASSWORD,
   },
 });
-
 app.use(cors());
 app.use(express.json());
 
 app.use((req, res, next) => {
+
+  
+const start = Date.now();
+
+ res.on("finish", () => {
+
+const duration = Date.now() - start;
+logger.info('Request completed', { latency: `${duration}ms` });
+
+ });
 
   logger.info(
     `${req.method} ${req.url}`
@@ -223,9 +243,9 @@ app.post("/register", async (req, res) => {
     const hashedPassword =
       await bcrypt.hash(password, 10);
 
-  db.prepare(
-  "INSERT INTO users(username,email,password) VALUES (?,?,?)"
-).run(username, email, hashedPassword);
+//   db.prepare(
+//   "INSERT INTO users(username,email,password) VALUES (?,?,?)"
+// ).run(username, email, hashedPassword);
 
 // await transporter.sendMail({
 //   from: process.env.EMAIL,
@@ -238,12 +258,37 @@ app.post("/register", async (req, res) => {
 // Welcome to KeepNote! 🎉`
 // });
 
+// res.json({
+//   message: "Registration Successful"
+// });
+       
+
+db.prepare(
+  "INSERT INTO users(username,email,password) VALUES (?,?,?)"
+).run(username, email, hashedPassword);
+
+try {
+
+  await transporter.sendMail({
+    from: process.env.EMAIL,
+    to: email,
+    subject: "Welcome to KeepNote 📝",
+    text: `Hello ${username},
+
+Your account has been created successfully.
+
+Welcome to KeepNote! 🎉`
+  });
+
+} catch (err) {
+
+  console.log("Mail failed:", err);
+
+}
+
 res.json({
   message: "Registration Successful"
 });
-       
-
-
     
 
   } catch (err) {
