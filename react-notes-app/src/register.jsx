@@ -35,10 +35,14 @@ function Register({
 
     try {
 
+      // const response =
+      //   await fetch(
+      //     "https://notes-app-hhgp.onrender.com/register",
+          
       const response =
-        await fetch(
-          "http://localhost:3001/register",
-          {
+  await fetch(
+    `${import.meta.env.VITE_BASE_URL}/register`,
+      {
             method: "POST",
 
             headers: {

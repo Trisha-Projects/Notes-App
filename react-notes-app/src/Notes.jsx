@@ -9,8 +9,8 @@ function Notes({
 }) 
 {
 
-  const BASE_URL = "http://localhost:3001";
-
+  //const BASE_URL = "http://localhost:3001";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
   const token = localStorage.getItem("token");
 
   const [title, setTitle] = useState("");

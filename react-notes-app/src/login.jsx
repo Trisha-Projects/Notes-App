@@ -29,9 +29,12 @@ const [loading, setLoading] = useState(false);
 
   try {
 
+    // const res = await fetch(
+    //   "https://notes-app-hhgp.onrender.com/login",
     const res = await fetch(
-      "http://localhost:3001/login",
-      {
+  `${import.meta.env.VITE_BASE_URL}/login`, 
+    
+    {
         method: "POST",
 
         headers: {
