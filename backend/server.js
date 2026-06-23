@@ -99,15 +99,59 @@ function authenticateToken(req, res, next) {
   );
 }
 
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
 
   const { username, password } = req.body;
 
- const user = db
-  .prepare(
-    "SELECT * FROM users WHERE username=?"
-  )
-  .get(username);
+  try {
+
+    const user = db
+      .prepare(
+        "SELECT * FROM users WHERE username=?"
+      )
+      .get(username);
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid Credentials"
+      });
+    }
+
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Invalid Credentials"
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user.id,
+        username: user.username
+      },
+      SECRET_KEY
+    );
+
+    res.json({
+      token
+    });
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      message: "Server Error"
+    });
+
+  }
+
 });
 
 
@@ -182,6 +226,17 @@ app.post("/register", async (req, res) => {
   db.prepare(
   "INSERT INTO users(username,email,password) VALUES (?,?,?)"
 ).run(username, email, hashedPassword);
+
+await transporter.sendMail({
+  from: process.env.EMAIL,
+  to: email,
+  subject: "Welcome to KeepNote 📝",
+  text: `Hello ${username},
+
+Your account has been created successfully.
+
+Welcome to KeepNote! 🎉`
+});
 
 res.json({
   message: "Registration Successful"
@@ -277,8 +332,15 @@ app.get("/user/:id", (req, res) => {
   res.json({ id });
 });
 
-app.listen(3001, () => {
+// app.listen(3001, () => {
+//   console.log(
+//     "Server running on port 3001"
+//   );
+// });
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
   console.log(
-    "Server running on port 3001"
+    `Server running on port ${PORT}`
   );
 });
