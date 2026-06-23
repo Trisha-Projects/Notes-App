@@ -227,16 +227,16 @@ app.post("/register", async (req, res) => {
   "INSERT INTO users(username,email,password) VALUES (?,?,?)"
 ).run(username, email, hashedPassword);
 
-await transporter.sendMail({
-  from: process.env.EMAIL,
-  to: email,
-  subject: "Welcome to KeepNote 📝",
-  text: `Hello ${username},
+// await transporter.sendMail({
+//   from: process.env.EMAIL,
+//   to: email,
+//   subject: "Welcome to KeepNote 📝",
+//   text: `Hello ${username},
 
-Your account has been created successfully.
+// Your account has been created successfully.
 
-Welcome to KeepNote! 🎉`
-});
+// Welcome to KeepNote! 🎉`
+// });
 
 res.json({
   message: "Registration Successful"
