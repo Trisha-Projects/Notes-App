@@ -75,19 +75,19 @@ function Register({
         "Registration Successful"
       );
 
-//       await fetch(
-//   "http://localhost:3001/send-mail",
-//   {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json"
-//     },
-//     body: JSON.stringify({
-//       username,
-//       email 
-//     })
-//   }
-// );
+      await fetch(
+  "http://localhost:3001/send-mail",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      username,
+      email 
+    })
+  }
+);
 
       setTimeout(() => {
         navigate("/login");
