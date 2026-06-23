@@ -6,8 +6,8 @@ import {
 } from "react-router-dom";
 
 import Home from "./Home";
-import Login from "./Login";
-import Register from "./Register";
+import Login from "./login";
+import Register from "./register";
 import Notes from "./Notes";
 import { useState } from "react";
 
