@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState ,useRef} from "react";
 import { useNavigate } from "react-router-dom";
 import "./Auth.css";
 import { ToastContainer, toast } from "react-toastify";
@@ -9,20 +9,20 @@ function Register({
   toggleTheme
 }) {
 
-  const [username, setUsername] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
+  const [username, setUsername] = useState("");
+  const [password, setPassword] =useState("");
     const [email, setEmail] = useState("");
+    const emailRef=useRef(null);
+    const passwordRef=useRef(null);
+
+    const [loading,setloading]=useState("");
 
   const navigate = useNavigate();
 
   async function handleRegister() {
 
     console.log("Register button clicked");
-
+if (loading) return;
     if (
       username === "" || email === "" ||
       password === ""
@@ -32,6 +32,7 @@ function Register({
       );
       return;
     }
+    setloading(true);
 
     try {
 
@@ -88,6 +89,7 @@ function Register({
     })
   }
 );
+setloading(false);
 
       setTimeout(() => {
         navigate("/login");
@@ -150,33 +152,42 @@ function Register({
           type="text"
           placeholder="Username"
           value={username}
-          onChange={(e) =>
-            setUsername(
-              e.target.value
-            )
-          }
+          onChange={(e) =>setUsername(e.target.value)}
+          onKeyDown={(e)=>{
+            if(e.key==="Enter"){
+              emailRef.current.focus();
+            }}}
+        
         />
 
         <input
   className="auth-input"
+  ref={emailRef}
   type="email"
   placeholder="Email"
   value={email}
-  onChange={(e) =>
-    setEmail(e.target.value)
-  }
+  onChange={(e) => setEmail(e.target.value)}
+  onKeyDown={(e)=>{
+    if(e.key==="Enter"){
+      passwordRef.current.focus();
+    }
+  }}
+   
 />
 
         <input
           className="auth-input"
+          ref={passwordRef}
           type="password"
           placeholder="Password"
           value={password}
-          onChange={(e) =>
-            setPassword(
-              e.target.value
-            )
-          }
+          onChange={(e) =>setPassword( e.target.value)}
+          onKeyDown={(e)=>{
+            if(e.key==="Enter"){
+              handleRegister();
+            }
+          }}
+            
         />
 
         <button

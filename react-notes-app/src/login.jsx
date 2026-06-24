@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./Auth.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useRef } from "react";
 
 function Login({
   darkMode,
@@ -10,6 +11,7 @@ function Login({
 }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const passwordRef=useRef(null);
 const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -90,8 +92,7 @@ const [loading, setLoading] = useState(false);
 }
 
   return (
-    <div
-  className={
+    <div className={
     darkMode
       ? "auth-page dark"
       : "auth-page light"
@@ -126,18 +127,27 @@ const [loading, setLoading] = useState(false);
           type="text"
           placeholder="Username"
           value={username}
-          onChange={(e) =>
-            setUsername(e.target.value)
+          onChange={(e) => setUsername(e.target.value)}
+          onKeyDown={(e)=> {
+            if (e.key==="Enter") {
+              passwordRef.current.focus(); }
+            }
           }
         />
 
         <input
           className="auth-input"
+          ref={passwordRef}
           type="password"
           placeholder="Password"
           value={password}
-          onChange={(e) =>
-            setPassword(e.target.value)
+          onChange={(e) =>setPassword(e.target.value)}
+          onKeyDown={(e)=>{
+            if(e.key==="Enter"){
+              login();
+            }
+          }
+
           }
         />
 

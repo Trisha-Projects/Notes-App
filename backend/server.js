@@ -48,6 +48,7 @@ const transporter=nodemailer.createTransport({
     pass:process.env.PASSWORD,
   },
 });
+
 app.use(cors());
 app.use(express.json());
 
