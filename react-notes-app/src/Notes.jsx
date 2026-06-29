@@ -148,6 +148,58 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 
   }
 
+  async function pinNote(id) {
+
+  const res = await fetch(
+    `${BASE_URL}/api/notes/pin/${id}`,
+    {
+      method: "PUT",
+
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  if (!res.ok) {
+
+    toast.error("Unable to Pin");
+
+    return;
+
+  }
+
+  window.location.reload();
+
+}
+
+async function archiveNote(id) {
+
+  const res = await fetch(
+    `${BASE_URL}/api/notes/archive/${id}`,
+    {
+      method: "PUT",
+
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  if (!res.ok) {
+
+    toast.error("Archive Failed");
+
+    return;
+
+  }
+
+  toast.success("Note Archived");
+
+  window.location.reload();
+
+}
+
   async function deleteNote(id) {
 
     const res = await fetch(
@@ -209,6 +261,39 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 
   }
 
+  async function loadArchivedNotes() {
+
+  const res = await fetch(
+    `${BASE_URL}/api/notes/archive`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  const data = await res.json();
+
+  setNotes(data);
+
+}
+
+async function loadArchivedNotes() {
+
+  const res = await fetch(
+    `${BASE_URL}/api/notes/archive`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  const data = await res.json();
+
+  setNotes(data);
+
+}
 
   function logout() {
 
@@ -256,6 +341,13 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
         ? "☀ Light"
         : "🌙 Dark"}
     </button>
+
+<button
+  className="theme-btn"
+  onClick={loadArchivedNotes}
+>
+  📦 Archive
+</button>
 
     <button
       className="logout-btn"
@@ -361,6 +453,17 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
                   </ul>
 
                   <div className="btn-grp">
+<button
+  onClick={() => pinNote(note.id)}
+>
+  {note.isPinned ? "📍 Unpin" : "📌 Pin"}
+</button>
+
+<button
+  onClick={() => archiveNote(note.id)}
+>
+  {note.isArchived ? "📤 Restore" : "📦 Archive"}
+</button>
 
                     <button
                       onClick={() =>

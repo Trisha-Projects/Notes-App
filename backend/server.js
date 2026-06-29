@@ -73,6 +73,14 @@ logger.info('Request completed', { latency: `${duration}ms` });
 
 const db = new Database("./notes.db");
 
+// db.exec(`
+// ALTER TABLE notes ADD COLUMN isPinned INTEGER DEFAULT 0;
+// `);
+
+// db.exec(`
+// ALTER TABLE notes ADD COLUMN isArchived INTEGER DEFAULT 0;
+// `);
+
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS notes(
@@ -80,6 +88,8 @@ CREATE TABLE IF NOT EXISTS notes(
   title TEXT,
   content TEXT,
   user_id INTEGER,
+    isPinned INTEGER DEFAULT 0,
+    isArchived INTEGER DEFAULT 0,
   FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
@@ -307,13 +317,25 @@ res.json({
 app.get( "/api/notes", authenticateToken, (req, res) => {
    const rows = db
   .prepare(
-    "SELECT * FROM notes WHERE user_id=?"
+    "SELECT * FROM notes WHERE user_id = ?AND isArchived = 0 ORDER BY isPinned DESC, id DESC"
   )
   .all(req.user.id);
 
 res.json(rows);
   }
 );
+
+app.get("/api/notes/archive", authenticateToken, (req, res) => {
+
+  const rows = db
+    .prepare(
+      "SELECT * FROM notes WHERE user_id=? AND isArchived=1 ORDER BY isPinned DESC, id DESC"
+    )
+    .all(req.user.id);
+
+  res.json(rows);
+
+});
 
 app.post("/api/notes", authenticateToken, (req, res) => {
 
@@ -339,6 +361,7 @@ res.json({
 
 app.put("/api/notes/:id", authenticateToken, (req, res) => {
 
+
   const { id } = req.params;
   const { title, content } = req.body;
 
@@ -351,6 +374,60 @@ res.json({
   title,
   content
 });
+
+});
+
+app.get("/api/notes/archive", authenticateToken, (req, res) => {
+
+  const rows = db.prepare(
+    `SELECT *
+     FROM notes
+     WHERE user_id = ?
+     AND isArchived = 1
+     ORDER BY id DESC`
+  ).all(req.user.id);
+
+  res.json(rows);
+
+});
+
+app.put("/api/notes/pin/:id", authenticateToken, (req, res) => {
+
+  const { id } = req.params;
+
+  const note = db.prepare(
+    "SELECT * FROM notes WHERE id=? AND user_id=?"
+  ).get(id, req.user.id);
+
+  const newValue = note.isPinned ? 0 : 1;
+
+  db.prepare(
+    "UPDATE notes SET isPinned=? WHERE id=? AND user_id=?"
+  ).run(newValue, id, req.user.id);
+
+  res.json({
+    message: "Pin Updated"
+  });
+
+});
+
+app.put("/api/notes/archive/:id", authenticateToken, (req, res) => {
+
+  const { id } = req.params;
+
+  const note = db.prepare(
+    "SELECT * FROM notes WHERE id=? AND user_id=?"
+  ).get(id, req.user.id);
+
+  const newValue = note.isArchived ? 0 : 1;
+
+  db.prepare(
+    "UPDATE notes SET isArchived=? WHERE id=? AND user_id=?"
+  ).run(newValue, id, req.user.id);
+
+  res.json({
+    message: "Archive Updated"
+  });
 
 });
 
