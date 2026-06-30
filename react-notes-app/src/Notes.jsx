@@ -50,8 +50,15 @@ function Notes({ darkMode, toggleTheme }) {
     setNotes(data);
 
     setShowArchive(true);
+  
+     setTimeout(() => {
+    document.querySelector(".savednotes")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }, 100);}
 
-  }
+
 
   useEffect(() => {
 

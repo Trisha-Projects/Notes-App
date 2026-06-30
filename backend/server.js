@@ -278,24 +278,24 @@ db.prepare(
   "INSERT INTO users(username,email,password) VALUES (?,?,?)"
 ).run(username, email, hashedPassword);
 
-try {
+// try {
 
-  await transporter.sendMail({
-    from: process.env.EMAIL,
-    to: email,
-    subject: "Welcome to KeepNote 📝",
-    text: `Hello ${username},
+//   await transporter.sendMail({
+//     from: process.env.EMAIL,
+//     to: email,
+//     subject: "Welcome to KeepNote 📝",
+//     text: `Hello ${username},
 
-Your account has been created successfully.
+// Your account has been created successfully.
 
-Welcome to KeepNote! 🎉`
-  });
+// Welcome to KeepNote! 🎉`
+//   });
 
-} catch (err) {
+// } catch (err) {
 
-  console.log("Mail failed:", err);
+//   console.log("Mail failed:", err);
 
-}
+// }
 
 res.json({
   message: "Registration Successful"
