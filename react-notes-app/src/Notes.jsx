@@ -46,7 +46,6 @@ function Notes({ darkMode, toggleTheme }) {
     );
 
     const data = await res.json();
-
     setNotes(data);
 
     setShowArchive(true);
