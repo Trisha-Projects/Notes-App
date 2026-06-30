@@ -399,6 +399,12 @@ app.put("/api/notes/pin/:id", authenticateToken, (req, res) => {
     "SELECT * FROM notes WHERE id=? AND user_id=?"
   ).get(id, req.user.id);
 
+  if (!note) {
+    return res.status(404).json({
+      message: "Note not found"
+    });
+  }
+
   const newValue = note.isPinned ? 0 : 1;
 
   db.prepare(
@@ -406,7 +412,7 @@ app.put("/api/notes/pin/:id", authenticateToken, (req, res) => {
   ).run(newValue, id, req.user.id);
 
   res.json({
-    message: "Pin Updated"
+    message: newValue ? "Pinned" : "Unpinned"
   });
 
 });

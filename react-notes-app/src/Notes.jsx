@@ -3,14 +3,9 @@ import "./App.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function Notes({
-  darkMode,
-  toggleTheme
-}) 
-{
+function Notes({ darkMode, toggleTheme }) {
 
-  //const BASE_URL = "http://localhost:3001";
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+  const BASE_URL = import.meta.env.VITE_BASE_URL;
   const token = localStorage.getItem("token");
 
   const [title, setTitle] = useState("");
@@ -18,39 +13,65 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
   const [search, setSearch] = useState("");
   const [editIndex, setEditIndex] = useState(null);
   const [notes, setNotes] = useState([]);
- 
+  const [showArchive, setShowArchive] = useState(false);
 
-  useEffect(() => {
+  async function loadNotes() {
 
-    fetch(
+    const res = await fetch(
       `${BASE_URL}/api/notes`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
-        },
+          Authorization: `Bearer ${token}`
+        }
       }
-    )
-      .then((response) => response.json())
-      .then((data) => setNotes(data))
-      .catch((err) => console.log(err));
+    );
+
+    const data = await res.json();
+
+    setNotes(data);
+
+    setShowArchive(false);
+
+  }
+
+  async function loadArchivedNotes() {
+
+    const res = await fetch(
+      `${BASE_URL}/api/notes/archive`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    setNotes(data);
+
+    setShowArchive(true);
+
+  }
+
+  useEffect(() => {
+
+    loadNotes();
 
   }, []);
 
   async function saveNote() {
 
-    if (
-      title === "" ||
-      content === ""
-    ) {
-      toast.warning(
-        "Fill all fields"
-      );
+    if (title === "" || content === "") {
+
+      toast.warning("Fill all fields");
+
       return;
+
     }
 
     const newNote = {
       title,
-      content,
+      content
     };
 
     if (editIndex === null) {
@@ -61,37 +82,25 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
           method: "POST",
 
           headers: {
-            "Content-Type":
-              "application/json",
-
-            Authorization:
-              `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
           },
 
-          body: JSON.stringify(
-            newNote
-          ),
+          body: JSON.stringify(newNote)
         }
       );
 
       if (!res.ok) {
-        toast.error(
-          "Unable to Save Note"
-        );
+
+        toast.error("Unable to Save Note");
+
         return;
+
       }
 
-      const data =
-        await res.json();
+      toast.success("Note Added Successfully");
 
-      setNotes([
-        ...notes,
-        data,
-      ]);
-
-      toast.success(
-        "Note Added Successfully"
-      );
+      loadNotes();
 
     }
 
@@ -103,102 +112,113 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
           method: "PUT",
 
           headers: {
-            "Content-Type":
-              "application/json",
-
-            Authorization:
-              `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
           },
 
-          body: JSON.stringify(
-            newNote
-          ),
+          body: JSON.stringify(newNote)
         }
       );
 
       if (!res.ok) {
-        toast.error(
-          "Update Failed"
-        );
+
+        toast.error("Update Failed");
+
         return;
+
       }
 
-      setNotes(
-        notes.map((note) =>
-          note.id === editIndex
-            ? {
-                ...note,
-                title,
-                content,
-              }
-            : note
-        )
-      );
+      toast.success("Note Updated Successfully");
 
       setEditIndex(null);
 
-      toast.info(
-        "Note Updated Successfully"
-      );
+      loadNotes();
 
     }
 
     setTitle("");
+
     setContent("");
 
   }
 
-  async function pinNote(id) {
+  async function pinNote(id, isPinned) {
 
-  const res = await fetch(
-    `${BASE_URL}/api/notes/pin/${id}`,
-    {
-      method: "PUT",
+    const res = await fetch(
+      `${BASE_URL}/api/notes/pin/${id}`,
+      {
+        method: "PUT",
 
-      headers: {
-        Authorization: `Bearer ${token}`
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       }
+    );
+
+    if (!res.ok) {
+
+      toast.error("Unable to Pin");
+
+      return;
+
     }
-  );
 
-  if (!res.ok) {
+   
 
-    toast.error("Unable to Pin");
+    if (showArchive) {
 
-    return;
+      loadArchivedNotes();
+
+    }
+
+    else {
+
+      loadNotes();
+
+    }
 
   }
 
-  window.location.reload();
+  async function archiveNote(id) {
 
-}
+    const res = await fetch(
+      `${BASE_URL}/api/notes/archive/${id}`,
+      {
+        method: "PUT",
 
-async function archiveNote(id) {
-
-  const res = await fetch(
-    `${BASE_URL}/api/notes/archive/${id}`,
-    {
-      method: "PUT",
-
-      headers: {
-        Authorization: `Bearer ${token}`
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       }
+    );
+
+    if (!res.ok) {
+
+      toast.error("Archive Failed");
+
+      return;
+
     }
-  );
 
-  if (!res.ok) {
+    toast.success(
+      showArchive
+        ? "Note Restored"
+        : "Note Moved To Archive"
+    );
 
-    toast.error("Archive Failed");
+    if (showArchive) {
 
-    return;
+      loadArchivedNotes();
+
+    }
+
+    else {
+
+      loadNotes();
+
+    }
 
   }
-
-  toast.success("Note Archived");
-
-  window.location.reload();
-
-}
 
   async function deleteNote(id) {
 
@@ -208,304 +228,296 @@ async function archiveNote(id) {
         method: "DELETE",
 
         headers: {
-          Authorization:
-            `Bearer ${token}`,
-        },
+          Authorization: `Bearer ${token}`
+        }
       }
     );
 
     if (!res.ok) {
 
-      toast.error(
-        "Delete Failed"
-      );
+      toast.error("Delete Failed");
 
       return;
 
     }
 
-    setNotes(
-      notes.filter(
-        (note) =>
-          note.id !== id
-      )
-    );
+    toast.success("Note Deleted Successfully");
 
-    toast.success(
-      "Note Deleted Successfully"
-    );
+    loadNotes();
 
   }
 
   function editNote(id) {
 
-    const note =
-      notes.find(
-        (n) =>
-          n.id === id
-      );
+    const note = notes.find(
+      (n) => n.id === id
+    );
 
-    if (note) {
+    if (!note) return;
 
-      setTitle(
-        note.title
-      );
+    setTitle(note.title);
 
-      setContent(
-        note.content
-      );
+    setContent(note.content);
 
-      setEditIndex(id);
-
-    }
+    setEditIndex(id);
 
   }
 
-  async function loadArchivedNotes() {
-
-  const res = await fetch(
-    `${BASE_URL}/api/notes/archive`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
-  );
-
-  const data = await res.json();
-
-  setNotes(data);
-
-}
-
-async function loadArchivedNotes() {
-
-  const res = await fetch(
-    `${BASE_URL}/api/notes/archive`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
-  );
-
-  const data = await res.json();
-
-  setNotes(data);
-
-}
-
   function logout() {
 
-    localStorage.removeItem(
-      "token"
-    );
+    localStorage.removeItem("token");
 
     window.location.href = "/";
 
   }
 
-  const filteredNotes =
-    notes.filter((note) =>
+  const filteredNotes = notes.filter(
+    (note) =>
       note.title
         .toLowerCase()
-        .includes(
-          search.toLowerCase()
-        )
-    );
+        .includes(search.toLowerCase())
+  );
 
   return (
-    <>
+  <>
 
-      <div
-  className={
-    darkMode
-      ? "container dark"
-      : "container light"
-  }
->
-
-       <div className="navbar">
-
-  <h1 className="heading">
-  <span>✨</span> KeepNote
-</h1>
-
-  <div className="nav-btns">
-
-    <button
-      className="theme-btn"
-      onClick={toggleTheme}
+    <div
+      className={
+        darkMode
+          ? "container dark"
+          : "container light"
+      }
     >
-      {darkMode
-        ? "☀ Light"
-        : "🌙 Dark"}
-    </button>
 
-<button
-  className="theme-btn"
-  onClick={loadArchivedNotes}
->
-  📦 Archive
-</button>
+      <div className="navbar">
 
-    <button
-      className="logout-btn"
-      onClick={logout}
-    >
-      🚪 Logout
-    </button>
+        <h1 className="heading">
+          <span>✨</span> KeepNote
+        </h1>
 
-  </div>
-
-</div>
-
-        <div className="form-card">
-
-          <input
-            type="text"
-            placeholder="📝 Note Title"
-            value={title}
-            onChange={(e) =>
-              setTitle(
-                e.target.value
-              )
-            }
-            className="title"
-          />
-
-          <textarea
-            placeholder="✍️ Write your note..."
-            value={content}
-            onChange={(e) =>
-              setContent(
-                e.target.value
-              )
-            }
-            className="content"
-          />
+        <div className="nav-btns">
 
           <button
-            onClick={saveNote}
-            className="save-btn"
+            className="theme-btn"
+            onClick={toggleTheme}
           >
-            {
-              editIndex === null
-                ? "➕ Add Note"
-                : "💾 Update Note"
-            }
+            {darkMode ? "☀ Light" : "🌙 Dark"}
           </button>
 
-        </div>
+          <button
+            className="theme-btn"
+            onClick={loadNotes}
+          >
+            📝 Notes
+          </button>
 
-       <div className="search-card">
+          <button
+            className="theme-btn"
+            onClick={loadArchivedNotes}
+          >
+            📦 View Archive
+          </button>
 
-  <input
-    type="text"
-    placeholder="🔍 Search Notes..."
-    value={search}
-    onChange={(e) =>
-      setSearch(
-        e.target.value
-      )
-    }
-    className="search"
-  />
-
-</div>
-
-        <div className="savednotes">
-
-          {
-            filteredNotes.map(
-              (note) => (
-
-                <div
-                  key={note.id}
-                  className="note-card"
-                >
-
-                  <h3>
-                    {note.title}
-                  </h3>
-
-                  <ul>
-
-                    {
-                      note.content
-                        .split("\n")
-                        .map(
-                          (
-                            line,
-                            i
-                          ) => (
-
-                            <li
-                              key={i}
-                            >
-                              {line}
-                            </li>
-
-                          )
-                        )
-                    }
-
-                  </ul>
-
-                  <div className="btn-grp">
-<button
-  onClick={() => pinNote(note.id)}
->
-  {note.isPinned ? "📍 Unpin" : "📌 Pin"}
-</button>
-
-<button
-  onClick={() => archiveNote(note.id)}
->
-  {note.isArchived ? "📤 Restore" : "📦 Archive"}
-</button>
-
-                    <button
-                      onClick={() =>
-                        editNote(
-                          note.id
-                        )
-                      }
-                      className="edit-btn"
-                    >
-                      ✏️
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        deleteNote(
-                          note.id
-                        )
-                      }
-                      className="delete-btn"
-                    >
-                      🗑️
-                    </button>
-
-                  </div>
-
-                </div>
-
-              )
-            )
-          }
+          <button
+            className="logout-btn"
+            onClick={logout}
+          >
+            🚪 Logout
+          </button>
 
         </div>
 
       </div>
 
-      <ToastContainer
-        position="top-right"
-        autoClose={2000}
-      />
+      <div className="form-card">
 
-    </>
-  );
+        <input
+          type="text"
+          placeholder="📝 Note Title"
+          value={title}
+          onChange={(e) =>
+            setTitle(e.target.value)
+          }
+          className="title"
+        />
+
+        <textarea
+          placeholder="✍️ Write your note..."
+          value={content}
+          onChange={(e) =>
+            setContent(e.target.value)
+          }
+          className="content"
+        />
+
+        <button
+          onClick={saveNote}
+          className="save-btn"
+        >
+          {
+            editIndex === null
+              ? "➕ Add Note"
+              : "💾 Update Note"
+          }
+        </button>
+
+      </div>
+
+      <div className="search-card">
+
+        <input
+          type="text"
+          placeholder="🔍 Search Notes..."
+          value={search}
+          onChange={(e) =>
+            setSearch(e.target.value)
+          }
+          className="search"
+        />
+
+      </div>
+
+      <div className="savednotes">
+
+      
+ {
+  filteredNotes.length === 0 && (
+
+    <div className="empty-state">
+
+     <div className="empty-icon">
+  {showArchive ? "📦" : "📝"}
+</div>
+
+      <h2>
+        {showArchive
+          ? "No Archived Notes"
+          : "No Notes Found"}
+      </h2>
+
+      {showArchive && (
+        // <>
+        //   <p>Your archived notes will appear here.</p>
+
+          <button
+            className="back-notes-btn"
+            onClick={loadNotes}
+          >
+            ← Back to Notes
+          </button>
+        // </>
+      )}
+
+    </div>
+
+  )
+}
+
+
+        {
+
+          filteredNotes.map((note) => (
+
+            <div
+              key={note.id}
+              className="note-card"
+            >
+
+             {/* <h3>{note.title}</h3> */}
+             <h3>
+ {note.isPinned === 1 && (
+  <span className="pinned-icon">📌</span>
+)}
+  {note.title}
+</h3>
+
+              <ul>
+
+                {
+                  note.content
+                    .split("\n")
+                    .map((line, i) => (
+
+                      <li key={i}>
+                        {line}
+                      </li>
+
+                    ))
+                }
+
+              </ul>
+
+              <div className="btn-grp">
+
+                {/* <button
+                  onClick={() =>
+                    pinNote(note.id, note.isPinned)
+                  }
+                >
+                  {
+                    note.isPinned
+                      ? "📍 Unpin"
+                      : "📌 Pin"
+                  }
+                </button> */}
+<button
+  className="icon-btn"
+  data-title={note.isPinned ? "Unpin" : "Pin"}
+  onClick={() => pinNote(note.id, note.isPinned)}
+>
+  {note.isPinned ? "📍" : "📌"}
+</button>
+            
+<button
+  className="archive-btn"
+  data-title={showArchive ? "Restore" : "Archive"}
+  onClick={() => archiveNote(note.id)}
+>
+                  {
+                    showArchive
+                      ? "📤"
+                      : "📦"
+                  }
+                </button>
+
+                <button
+                  className="edit-btn"
+                  onClick={() =>
+                    editNote(note.id)
+                  }
+                >
+                  ✏️
+                </button>
+
+                <button
+                  className="delete-btn"
+                  onClick={() =>
+                    deleteNote(note.id)
+                  }
+                >
+                  🗑️
+                </button>
+
+              </div>
+
+            </div>
+
+          ))
+
+        }
+
+      </div>
+
+    </div>
+
+    <ToastContainer
+      position="top-right"
+      autoClose={2000}
+    />
+
+  </>
+);
+
 }
 
 export default Notes;
