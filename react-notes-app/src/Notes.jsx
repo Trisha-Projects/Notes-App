@@ -32,6 +32,13 @@ function Notes({ darkMode, toggleTheme }) {
 
     setShowArchive(false);
 
+    setTimeout(() => {
+    document.querySelector(".savednotes")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  },100);
+
   }
 
   async function loadArchivedNotes() {
